@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>9.0</LangVersion>
         <PackageId>Kizar.MediatR.Caching</PackageId>
-        <Version>1.0.0</Version>
+        <Version>1.0.1</Version>
         <Authors>Habib Akcakale</Authors>
         <Description>MediatR pipeline caching, with attribute based convention, on the top of the dotnet In Memory Caching</Description>
         <PackageProjectUrl>https://github.com/habibakcakale/kizar-mediatr-caching</PackageProjectUrl>
