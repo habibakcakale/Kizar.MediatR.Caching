@@ -1,7 +1,7 @@
 # Kizar.MediatR.Caching
 MediatR pipeline caching, with attribute based convention, on the top of the dotnet In Memory Caching
 
-#How To
+# How To  
 In your start up or place where you configure your dependencies register below services.
 ```c#
     public class Startup {
