@@ -1,5 +1,6 @@
 namespace Kizar.MediatR.Caching {
     using System;
+    using System.Collections;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -40,8 +41,16 @@ namespace Kizar.MediatR.Caching {
             var props = attr.KeyProps != null
                 ? type.GetProperties().Where(item => attr.KeyProps.Contains(item.Name))
                 : Array.Empty<PropertyInfo>();
-            var cacheKey = string.Concat(type.FullName, string.Join("-", props.Select(prop => prop.GetValue(request))));
+            var cacheKey = string.Concat(type.FullName, string.Join("-", props.Select(prop => ConvertToString(prop.GetValue(request)))));
             return cacheKey;
+        }
+
+        private static string ConvertToString(object value) {
+            if (value is IEnumerable enumerable) {
+                return string.Join("-", enumerable.Cast<object>());
+            }
+
+            return value?.ToString();
         }
 
         private void EvictionCallback(object key, object value, EvictionReason reason, object state) {

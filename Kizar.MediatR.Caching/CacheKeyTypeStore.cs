@@ -3,7 +3,7 @@ namespace Kizar.MediatR.Caching {
     using System.Collections.Generic;
 
     public class CacheKeyTypeStore {
-        private readonly ConcurrentDictionary<string, IList<object>> store = new ConcurrentDictionary<string, IList<object>>();
+        private readonly ConcurrentDictionary<string, IList<object>> store = new();
 
         public void Add(string typeName, object key) {
             var list = store.GetOrAdd(typeName, value => new List<object>());
