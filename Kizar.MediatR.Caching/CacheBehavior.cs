@@ -2,6 +2,7 @@ namespace Kizar.MediatR.Caching {
     using System;
     using System.Collections;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
@@ -37,11 +38,11 @@ namespace Kizar.MediatR.Caching {
             });
         }
 
-        private static string CacheKey(T request, CacheableAttribute attr, Type type) {
-            var props = attr.KeyProps != null
-                ? type.GetProperties().Where(item => attr.KeyProps.Contains(item.Name))
-                : Array.Empty<PropertyInfo>();
-            var cacheKey = string.Concat(type.FullName, string.Join("-", props.Select(prop => ConvertToString(prop.GetValue(request)))));
+        private  string CacheKey(T request, CacheableAttribute attr, Type type) {
+            var cacheKey = string.Concat(type.FullName, string.Join("-", attr.KeyProps.Select(propertyName => {
+                var value = GetAccessor(propertyName).DynamicInvoke(request);
+                return ConvertToString(value);
+            })));
             return cacheKey;
         }
 
@@ -60,6 +61,19 @@ namespace Kizar.MediatR.Caching {
 
             var type = typeof(T);
             keyStore.RemoveKey(type.FullName, key);
+        }
+
+        private Delegate GetAccessor(string propertyName) {
+            return memoryCache.GetOrCreate(propertyName, _ => {
+                var parameter = Expression.Parameter(typeof(T), "req");
+                var propertyAccess = propertyName.Split('.')
+                    .Aggregate<string, MemberExpression>(null, (current, property) => current == null
+                        ? Expression.PropertyOrField(parameter, property)
+                        : Expression.PropertyOrField(current, property)
+                    );
+                var access = Expression.Lambda(propertyAccess, parameter);
+                return access.Compile();
+            });
         }
     }
 }
