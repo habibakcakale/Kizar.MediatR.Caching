@@ -38,7 +38,7 @@ namespace Kizar.MediatR.Caching {
             });
         }
 
-        private  string CacheKey(T request, CacheableAttribute attr, Type type) {
+        private string CacheKey(T request, CacheableAttribute attr, Type type) {
             var cacheKey = string.Concat(type.FullName, string.Join("-", attr.KeyProps.Select(propertyName => {
                 var value = GetAccessor(propertyName).DynamicInvoke(request);
                 return ConvertToString(value);
@@ -64,7 +64,7 @@ namespace Kizar.MediatR.Caching {
         }
 
         private Delegate GetAccessor(string propertyName) {
-            return memoryCache.GetOrCreate(propertyName, _ => {
+            return memoryCache.GetOrCreate(string.Concat(typeof(T).FullName, propertyName), _ => {
                 var parameter = Expression.Parameter(typeof(T), "req");
                 var propertyAccess = propertyName.Split('.')
                     .Aggregate<string, MemberExpression>(null, (current, property) => current == null
