@@ -39,11 +39,15 @@ namespace Kizar.MediatR.Caching {
         }
 
         private string CacheKey(T request, CacheableAttribute attr, Type type) {
-            var cacheKey = string.Concat(type.FullName, string.Join("-", attr.KeyProps.Select(propertyName => {
+            if (attr.KeyProps == null || !attr.KeyProps.Any()) {
+                return type.FullName;
+            }
+
+            var propKeys = string.Join("-", attr.KeyProps.Select(propertyName => {
                 var value = GetAccessor(propertyName).DynamicInvoke(request);
                 return ConvertToString(value);
-            })));
-            return cacheKey;
+            }));
+            return string.Concat(type.FullName, propKeys);
         }
 
         private static string ConvertToString(object value) {
