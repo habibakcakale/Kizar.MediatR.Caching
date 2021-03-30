@@ -10,6 +10,7 @@ namespace Kizar.MediatR.Caching {
     using Microsoft.Extensions.Caching.Memory;
 
     public class CacheBehavior<T, TK> : IPipelineBehavior<T, TK> {
+        private const string CacheKeyDelimiter = "-";
         private readonly CacheKeyTypeStore keyStore;
         private readonly IMemoryCache memoryCache;
 
@@ -43,19 +44,19 @@ namespace Kizar.MediatR.Caching {
                 return type.FullName;
             }
 
-            var propKeys = string.Join("-", attr.KeyProps.Select(propertyName => {
+            var propKeys = string.Join(CacheKeyDelimiter, attr.KeyProps.Select(propertyName => {
                 var value = GetAccessor(propertyName).DynamicInvoke(request);
                 return ConvertToString(value);
             }));
-            return string.Concat(type.FullName, propKeys);
+            return string.Concat(type.FullName, CacheKeyDelimiter, propKeys);
         }
 
         private static string ConvertToString(object value) {
-            if (value is IEnumerable enumerable) {
-                return string.Join("-", enumerable.Cast<object>());
-            }
-
-            return value?.ToString();
+            return value switch {
+                string stringValue => stringValue,
+                IEnumerable enumerable => string.Join(CacheKeyDelimiter, enumerable.Cast<object>()),
+                _ => value?.ToString()
+            };
         }
 
         private void EvictionCallback(object key, object value, EvictionReason reason, object state) {
@@ -69,13 +70,16 @@ namespace Kizar.MediatR.Caching {
 
         private Delegate GetAccessor(string propertyName) {
             return memoryCache.GetOrCreate(string.Concat(typeof(T).FullName, propertyName), _ => {
-                var parameter = Expression.Parameter(typeof(T), "req");
-                var propertyAccess = propertyName.Split('.')
-                    .Aggregate<string, MemberExpression>(null, (current, property) => current == null
-                        ? Expression.PropertyOrField(parameter, property)
-                        : Expression.PropertyOrField(current, property)
-                    );
-                var access = Expression.Lambda(propertyAccess, parameter);
+                var type = typeof(T);
+                var parameter = Expression.Parameter(type, "req");
+                var condition = Expression.NotEqual(parameter, Expression.Constant(null, typeof(T)));
+                var (propertyAccess, nullCheckAccess) = propertyName.Split('.')
+                    .Aggregate<string, (Expression parameter, Expression condition )>((parameter, condition), (prev, key) => {
+                        var next = Expression.PropertyOrField(prev.parameter, key);
+                        var nextCondition = Expression.AndAlso(prev.condition, Expression.NotEqual(next, Expression.Default(next.Type)));
+                        return (next, nextCondition);
+                    });
+                var access = Expression.Lambda(Expression.Condition(nullCheckAccess, propertyAccess, Expression.Default(propertyAccess.Type)), parameter);
                 return access.Compile();
             });
         }
