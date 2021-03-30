@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>9.0</LangVersion>
         <PackageId>Kizar.MediatR.Caching</PackageId>
-        <Version>1.1.2</Version>
+        <Version>1.1.3</Version>
         <Authors>Habib Akcakale</Authors>
         <Description>MediatR pipeline caching, with attribute based convention, on the top of the dotnet In Memory Caching</Description>
         <PackageProjectUrl>https://github.com/habibakcakale/kizar-mediatr-caching</PackageProjectUrl>
@@ -13,7 +13,7 @@
         <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
         <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
         <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-        <PackageVersion>1.1.2</PackageVersion>
+        <PackageVersion>1.1.3</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
